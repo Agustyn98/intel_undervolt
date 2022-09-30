@@ -11,9 +11,6 @@ def main():
         print("apply       apply values from the config file")
         return
 
-    if sys.argv[1] == "apply":
-        apply_values()
-
     elif sys.argv[1] == "read":
         subprocess.call("wrmsr 0x150 0x8000001000000000", shell=True)
         r = subprocess.check_output(["rdmsr", "0x150"])
