@@ -3,7 +3,7 @@
 In 2018, [This guide](https://github.com/mihic/linux-intel-undervolt) was made on how to undervolt your processor, while it is a great foundation, it doesn't provide all the information needed to get undervolting working. This short guide will show you how to succesfully lower voltages on your CPU and iGPU on linux.
 
 
-## Guide:
+# Guide:
 First of all, it is still possible to undervolt intel's proccesors regardless of your BIOS version and microcode, unlike what the [Arch wiki](https://wiki.archlinux.org/title/Undervolting_CPU) says.
 
 These are the components of your proccesor you can mess with:
@@ -16,7 +16,6 @@ These are the components of your proccesor you can mess with:
 
 
 ### Undervolting the CPU Cores
--- Cores and cache:
 To undervolt your CPU cores, you need to also undervolt your cache at the same time. The more you lower cache offset, the more you can undervolt your cores.
 For example, on my machine, with a -50mV offset on cache, I can undervolt the cores up to -90mV, setting values lower than -90 will have no further effect.
 
@@ -28,43 +27,37 @@ To undervolt your integrated graphics, you neeed to undervolt both iGPU and iGPU
 Undervolting the Analog I/O works just fine, while the Digital I/O mentioned on the original guide never worked. It was never recommended to modify any of these values anyway.
 
 
-### Overclocking
-Just like you can add negative offsets, you can add positive ones. Overclocking is also a posibility.
+# My Script
+
+Based on this information, I've made a small script in python to automate the process of lowering the voltage of your processor and integrated graphics.
+
+Note: Tested on 10th gen mobile cpu
 
 
-## My utility 
+## Usage
 
-Based on this information, you can use any tool mentioned [here](original-github.com), just remember that older utilities call the iGPU unslice as System Agent
+### Undervolting:
 
-I've also provided my own script which is less than 100 LOC and written in Python.
+`undervolt cpu_offset cache_offset gpu_offset unslice_offset analogio_offset`
 
+Example
 
+`undervolt 120 60 65 65 20`
 
-## Script installation 
-Clone this repository and move undervolt to your binaries folder
-Modify the sample config file undervolt.conf and copy it to /etc/undervolf.conf
+Note: Values are positive, but they represent the negative offset, if you pass negative values you will be overvolting
 
-$ git clone http...
-# cp undervolt /usr/local/bin
-# cp undervolt.conf /etc/
+### Read the offsets currently set on your computer:
 
-### Usage
+`undervolt read`
 
-undervolt apply
-Undervolt your processor according to the offset values indicated in /etc/uv-intel.conf
+## Persist changes
 
-undervolt read
-Get the offsets currently set on your computer
-
-### Persist changes
-The systemd unit uv.service will re-apply your settings after boot, suspend and hibernation.
+The systemd unit uv.service will re-apply your settings after rebooting
 
 To activate it:
 Move uv.service to /etc/systemd/system
 Enable the service
 
-# cp uv.service /etc/systemd/system
-# systemctl enable uv.service
+`cp uv.service /etc/systemd/system`
 
-### Config file
-Follow the sample config format. Positive values in this file translate to negative offsets in the script
+`systemctl enable uv.service`
