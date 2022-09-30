@@ -1,6 +1,6 @@
 # Undervolt intel processors on Linux, easier than on Windows
 
-In 2018, [This guide](https://github.com/mihic/linux-intel-undervolt) was made on how to undervolt your processor, while it is a great foundation, it doesn't provide all the information needed to get undervolting working. This short guide will show you how to succesfully lower voltages on your CPU and iGPU on linux.
+In 2018, [this guide](https://github.com/mihic/linux-intel-undervolt) was made on how to undervolt your processor, while it is a great foundation, it doesn't provide all the information needed to get undervolting working. This short guide will show you how to succesfully lower voltages on your CPU and iGPU on linux.
 
 
 # Guide:
@@ -33,6 +33,14 @@ Based on this information, I've made a small script in python to automate the pr
 
 Note: Tested on 10th gen mobile cpu
 
+## Dependencies:
+
+The `msr-tools` package is needed
+
+On debian based distros:
+
+`sudo apt install msr-tools`
+
 
 ## Usage
 
@@ -44,7 +52,7 @@ Example
 
 `undervolt 120 60 65 65 20`
 
-Note: Values are positive, but they represent the negative offset, if you pass negative values you will be overvolting
+Note: Values are positive, but they represent a negative offset, if you pass negative values you will be overvolting
 
 ### Read the offsets currently set on your computer:
 
