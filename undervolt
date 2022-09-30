@@ -1,0 +1,91 @@
+#!/usr/bin/python3
+
+import sys
+import subprocess
+
+
+def main():
+    if len(sys.argv) < 2 or sys.argv[1] in ("--help", "-h", "help"):
+        print("Usage: undervolt MODE")
+        print("read        read the current values")
+        print("apply       apply values from the config file")
+        return
+
+    if sys.argv[1] == "apply":
+        apply_values()
+
+    elif sys.argv[1] == "read":
+        subprocess.call("wrmsr 0x150 0x8000001000000000", shell=True)
+        r = subprocess.check_output(["rdmsr", "0x150"])
+        print("Cores: {:0.1f} mV".format(offset_to_mv(r)))
+
+        subprocess.call("wrmsr 0x150 0x8000021000000000", shell=True)
+        r = subprocess.check_output(["rdmsr", "0x150"])
+        print("Cache {:0.1f} mV".format(offset_to_mv(r)))
+
+        subprocess.call("wrmsr 0x150 0x8000011000000000", shell=True)
+        r = subprocess.check_output(["rdmsr", "0x150"])
+        print("GPU: {:0.1f} mV".format(offset_to_mv(r)))
+
+        subprocess.call("wrmsr 0x150 0x8000031000000000", shell=True)
+        r = subprocess.check_output(["rdmsr", "0x150"])
+        print("iGPU unslice: {:0.1f} mV".format(offset_to_mv(r)))
+
+        subprocess.call("wrmsr 0x150 0x8000041000000000", shell=True)
+        r = subprocess.check_output(["rdmsr", "0x150"])
+        print("Analog I/O: {:0.1f} mV".format(offset_to_mv(r)))
+
+    elif len(sys.argv) > 2:
+
+        apply_values(
+            cores=int(sys.argv[1]),
+            cache=int(sys.argv[2]),
+            gpu=int(sys.argv[3]),
+            unslice=int(sys.argv[4]),
+            analog=int(sys.argv[5]),
+        )
+
+    else:
+        print("Invalid argument")
+
+
+def offset_to_mv(offset):
+    x = int(offset, 16)
+    x = x >> 21
+    x = x if x <= 1024 else -(2048 - x)
+    x = x / 1.024
+    return x
+
+
+def apply_values(cores=0, cache=0, gpu=0, unslice=0, analog=0):
+
+    offset_cores = format(0xFFE00000 & ((round(cores * -1.024) & 0xFFF) << 21), "08x")
+    offset_gpu = format(0xFFE00000 & ((round(gpu * -1.024) & 0xFFF) << 21), "08x")
+    offset_cache = format(0xFFE00000 & ((round(cache * -1.024) & 0xFFF) << 21), "08x")
+    offset_unslice = format(
+        0xFFE00000 & ((round(unslice * -1.024) & 0xFFF) << 21), "08x"
+    )
+    offset_analog = format(0xFFE00000 & ((round(analog * -1.024) & 0xFFF) << 21), "08x")
+
+    command_cpu = "wrmsr 0x150 0x80000011" + offset_cores
+    command_gpu = "wrmsr 0x150 0x80000111" + offset_gpu
+    command_cache = "wrmsr 0x150 0x80000211" + offset_cache
+    command_unslice = "wrmsr 0x150 0x80000311" + offset_unslice
+    command_analog = "wrmsr 0x150 0x80000411" + offset_analog
+
+    commands = [
+        command_cpu,
+        command_gpu,
+        command_cache,
+        command_unslice,
+        command_analog,
+    ]
+
+    for c in commands:
+        subprocess.call(c, shell=True)
+
+    print("Values applied")
+
+
+if __name__ == "__main__":
+    main()
